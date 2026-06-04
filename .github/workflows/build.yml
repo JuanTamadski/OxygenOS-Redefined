@@ -31,8 +31,8 @@ jobs:
 
       - name: Set up Time
         run: |
-          echo "Setting Vienam timezone"
-          sudo timedatectl set-timezone Asia/Ho_Chi_Minh
+          echo "Setting Philippine timezone"
+          sudo timedatectl set-timezone Asia/Manila
 
   Build:
     needs: Initialize
@@ -61,20 +61,12 @@ jobs:
         run: |
           sudo bash build.sh "$INPUT_URL"
 
-      - name: Pack ROM...
+      - name: Pack ROM (Fastboot)...
         run: |
-          sudo bash packROM.sh n
+          sudo bash packROM-Fastboot.sh n
 
-      - name: Setup Rclone...
-        run: |
-          sudo -E bash uploadROM.sh setup "${{ secrets.GH_TOKEN }}" "${{ secrets.GH_REPO }}" "${{ secrets.RCLONE_TOKEN_PATH }}"
-          
-      - name: Upload ROM...
+      - name: Upload ROM to GitHub Releases...
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sudo -E bash uploadROM.sh
-      
-      - name: Update Database and Notificaton to Telegram
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TG_TOKEN }}
-        run: |
-          
