@@ -6,7 +6,10 @@ on:
       input_url:
         description: 'URL of the ROM to build'
         required: true
-      
+
+permissions:
+     contents: write
+
 jobs:
   Initialize:
     runs-on: ubuntu-latest
