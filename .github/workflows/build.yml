@@ -61,9 +61,10 @@ jobs:
       - name: Build ROM...
         env:
           INPUT_URL: ${{ inputs.input_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for the gh CLI to fetch the kernel
         run: |
-          sudo bash build.sh "$INPUT_URL"
-
+          sudo -E bash build.sh "$INPUT_URL"
+          
       - name: Pack ROM (Fastboot)...
         run: |
           sudo bash packROM-Fastboot.sh n
