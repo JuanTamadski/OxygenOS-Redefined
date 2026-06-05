@@ -61,21 +61,28 @@ GITHUB_REPO="${GITHUB_REPOSITORY}"
 RELEASE_TAG="${DEVICE_MODEL}-${VERSION}-${status}-Fastboot"
 RELEASE_TITLE="${NTBUILD} for ${DEVICE_MODEL} - v${VERSION} (${status}) [Fastboot]"
 
-# --- ADD THIS BLOCK ---
+# --- CHANGELOG BLOCK ---
 # Check if a changelog exists and read it
 if [ -f "$work_dir/changelog.txt" ]; then
   CHANGELOG_CONTENT=$(cat "$work_dir/changelog.txt")
 else
   CHANGELOG_CONTENT="* Minor under-the-hood fixes and optimizations."
 fi
-# ----------------------
+# -----------------------
 
 # 4. Create the release and upload ALL split parts
 echo "[GITHUB] - Creating fresh release ($RELEASE_TAG) and uploading files..."
 gh release create "$RELEASE_TAG" "${FINAL_ZIP_PATH}.part"* \
   --repo "$GITHUB_REPO" \
   --title "$RELEASE_TITLE" \
-  --notes "Automated Fastboot ROM build for ${DEVICE_MODEL}.<br>Build ID: ${BASE_BUILD_ID}<br>MD5: ${hash}<br><br>**⚠️ IMPORTANT:** This ROM is split into multiple parts. You MUST combine them before extracting and flashing."
+  --notes "Automated Fastboot ROM build for **${DEVICE_MODEL}**.
+**Build ID:** \`${BASE_BUILD_ID}\`
+**MD5 Hash:** \`${hash}\`
+
+### 📝 Changelog:
+${CHANGELOG_CONTENT}
+
+**⚠️ IMPORTANT:** This ROM is split into multiple parts. You MUST combine them before extracting and flashing."
 
 if [ $? -eq 0 ]; then
   echo "[GITHUB] - Upload successful!"
@@ -93,6 +100,7 @@ else
   echo "[GITHUB] - Error uploading file to GitHub Releases."
   exit 1
 fi
+
 # 5. Clean up the workspace
 echo "[SYSTEM] - Clean Workflow.."
 rm -rf "$work_dir/out"
