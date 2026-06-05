@@ -119,9 +119,3 @@ rm -rf "$work_dir/out"
 rm -rf "$work_dir/build"
 
 echo "[INFO] - Build ${NTBUILD}_${VERSION} for ${DEVICE_MODEL} successful!"
-# 5. Clean up the workspace
-echo "[SYSTEM] - Clean Workflow.."
-rm -rf "$work_dir/out"
-rm -rf "$work_dir/build"
-
-echo "[INFO] - Build ${NTBUILD}_${VERSION} for ${DEVICE_MODEL} successful!"
