@@ -31,8 +31,8 @@ jobs:
 
       - name: Set up Time
         run: |
-          echo "Setting Vienam timezone"
-          sudo timedatectl set-timezone Asia/Ho_Chi_Minh
+          echo "Setting Manila timezone"
+          sudo timedatectl set-timezone Asia/Manila
 
   Build:
     needs: Initialize
@@ -55,26 +55,25 @@ jobs:
         run: |
           sudo chmod 777 -R *
 
-      - name: Build ROM...
+      - name: Build and Pack ROM...
         env:
           INPUT_URL: ${{ inputs.input_url }}
         run: |
-          sudo bash build.sh "$INPUT_URL"
+          # Passing "y" here lets build.sh handle the entire pipeline natively
+          sudo bash build.sh "$INPUT_URL" "y"
 
-      - name: Pack ROM...
+      # --- NEW: SSH Setup for rsync ---
+      - name: Setup SSH for rsync upload
         run: |
-          sudo bash packROM.sh n
-
-      - name: Setup Rclone...
-        run: |
-          sudo -E bash uploadROM.sh setup "${{ secrets.GH_TOKEN }}" "${{ secrets.GH_REPO }}" "${{ secrets.RCLONE_TOKEN_PATH }}"
+          sudo mkdir -p /root/.ssh
+          # Write the private key from GitHub Secrets
+          echo "${{ secrets.SF_SSH_KEY }}" | sudo tee /root/.ssh/id_rsa > /dev/null
+          sudo chmod 600 /root/.ssh/id_rsa
+          
+          # Add SourceForge to known_hosts to prevent interactive prompts
+          # Change 'frs.sourceforge.net' if uploading elsewhere
+          sudo ssh-keyscan -t rsa frs.sourceforge.net | sudo tee -a /root/.ssh/known_hosts > /dev/null
           
       - name: Upload ROM...
         run: |
           sudo -E bash uploadROM.sh
-      
-      - name: Update Database and Notificaton to Telegram
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TG_TOKEN }}
-        run: |
-          
