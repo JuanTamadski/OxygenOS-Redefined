@@ -61,7 +61,17 @@ GITHUB_REPO="${GITHUB_REPOSITORY}"
 RELEASE_TAG="${DEVICE_MODEL}-${VERSION}-${status}-Fastboot"
 RELEASE_TITLE="${NTBUILD} for ${DEVICE_MODEL} - v${VERSION} (${status}) [Fastboot]"
 
+# --- ADD THIS BLOCK ---
+# Check if a changelog exists and read it
+if [ -f "$work_dir/changelog.txt" ]; then
+  CHANGELOG_CONTENT=$(cat "$work_dir/changelog.txt")
+else
+  CHANGELOG_CONTENT="* Minor under-the-hood fixes and optimizations."
+fi
+# ----------------------
+
 # 4. Create the release and upload ALL split parts
+echo "[GITHUB] - Creating fresh release ($RELEASE_TAG) and uploading files..."
 gh release create "$RELEASE_TAG" "${FINAL_ZIP_PATH}.part"* \
   --repo "$GITHUB_REPO" \
   --title "$RELEASE_TITLE" \
@@ -69,11 +79,20 @@ gh release create "$RELEASE_TAG" "${FINAL_ZIP_PATH}.part"* \
 
 if [ $? -eq 0 ]; then
   echo "[GITHUB] - Upload successful!"
+  
+  # Commit and push the new version file back to the repository
+  echo "[GITHUB] - Pushing new version number to repository..."
+  git config --global user.name "github-actions[bot]"
+  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  
+  git add "$work_dir/Version"
+  # The [skip ci] tag is critical: it prevents this commit from accidentally triggering an infinite loop of builds
+  git commit -m "chore: auto-bump release version to $VERSION [skip ci]"
+  git push
 else
   echo "[GITHUB] - Error uploading file to GitHub Releases."
   exit 1
 fi
-
 # 5. Clean up the workspace
 echo "[SYSTEM] - Clean Workflow.."
 rm -rf "$work_dir/out"
