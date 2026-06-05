@@ -9,11 +9,21 @@ BASE_BUILD_ID=$(cat $work_dir/bin/ddevice/base_build_id.txt)
 BRAND=$(cat $work_dir/bin/ddevice/brand.txt)
 
 # Determine Version and Status
+CURRENT_VERSION="$(cat $work_dir/Version)"
+
+# Auto-bump the minor version (e.g., 1.1 becomes 1.2)
+MAJOR="${CURRENT_VERSION%.*}"
+MINOR="${CURRENT_VERSION##*.}"
+NEW_MINOR=$((MINOR + 1))
+VERSION="${MAJOR}.${NEW_MINOR}"
+
+# Overwrite the local Version file with the new number
+echo "$VERSION" > "$work_dir/Version"
+echo "[SCRIPT] - Version auto-bumped from $CURRENT_VERSION to $VERSION"
+
 if [[ $(git branch --show-current) == "beta" ]]; then
-    VERSION="$(cat $work_dir/Version)"
     status="Beta"
 else
-    VERSION="$(cat $work_dir/Version)"
     status="Official"
 fi
 
