@@ -32,7 +32,15 @@ mkdir -p "$OUT_DIR/MODEM"
 
 # --- GITHUB INTEGRATION START ---
 echo "[SCRIPT] - Fetching latest AnyKernel3 from JuanTamadski/Action-Build..."
-AK3_URL=$(curl -s https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*\.zip" | head -n 1 | cut -d '"' -f 4)
+
+# Use GitHub Token to prevent rate limiting and access private repos
+if [ -n "$GITHUB_TOKEN" ]; then
+    echo "[SCRIPT] - Authenticated GitHub API request..."
+    AK3_URL=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*\.zip" | head -n 1 | cut -d '"' -f 4)
+else
+    echo "[SCRIPT] - Unauthenticated GitHub API request..."
+    AK3_URL=$(curl -s https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*\.zip" | head -n 1 | cut -d '"' -f 4)
+fi
 
 if [ -n "$AK3_URL" ]; then
     echo "[SCRIPT] - Downloading $(basename "$AK3_URL") to EXTRA folder..."
