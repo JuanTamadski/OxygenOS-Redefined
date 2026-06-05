@@ -70,9 +70,9 @@ else
 fi
 # -----------------------
 
-# 4. Create the release and upload ALL split parts
-echo "[GITHUB] - Creating fresh release ($RELEASE_TAG) and uploading files..."
-gh release create "$RELEASE_TAG" "${FINAL_ZIP_PATH}.part"* \
+# 4. Create the text release FIRST (without files)
+echo "[GITHUB] - Creating fresh release ($RELEASE_TAG)..."
+gh release create "$RELEASE_TAG" \
   --repo "$GITHUB_REPO" \
   --title "$RELEASE_TITLE" \
   --notes "Automated Fastboot ROM build for **${DEVICE_MODEL}**.
@@ -84,23 +84,41 @@ ${CHANGELOG_CONTENT}
 
 **⚠️ IMPORTANT:** This ROM is split into multiple parts. You MUST combine them before extracting and flashing."
 
-if [ $? -eq 0 ]; then
-  echo "[GITHUB] - Upload successful!"
-  
-  # Commit and push the new version file back to the repository
-  echo "[GITHUB] - Pushing new version number to repository..."
-  git config --global user.name "github-actions[bot]"
-  git config --global user.email "github-actions[bot]@users.noreply.github.com"
-  
-  git add "$work_dir/Version"
-  # The [skip ci] tag is critical: it prevents this commit from accidentally triggering an infinite loop of builds
-  git commit -m "chore: auto-bump release version to $VERSION [skip ci]"
-  git push
-else
-  echo "[GITHUB] - Error uploading file to GitHub Releases."
+if [ $? -ne 0 ]; then
+  echo "[GITHUB] - Error creating GitHub Release page."
   exit 1
 fi
 
+# 5. Upload each split part sequentially
+echo "[GITHUB] - Uploading split parts sequentially..."
+for part in "${FINAL_ZIP_PATH}.part"*; do
+  echo "[GITHUB] - Pushing $part..."
+  gh release upload "$RELEASE_TAG" "$part" --repo "$GITHUB_REPO"
+  
+  if [ $? -ne 0 ]; then
+    echo "[GITHUB] - ERROR: Failed to upload $part!"
+    exit 1
+  fi
+done
+
+echo "[GITHUB] - All parts uploaded successfully!"
+
+# 6. Commit and push the new version file back to the repository
+echo "[GITHUB] - Pushing new version number to repository..."
+git config --global user.name "github-actions[bot]"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+git add "$work_dir/Version"
+# The [skip ci] tag is critical: it prevents this commit from accidentally triggering an infinite loop of builds
+git commit -m "chore: auto-bump release version to $VERSION [skip ci]"
+git push
+
+# 7. Clean up the workspace
+echo "[SYSTEM] - Clean Workflow.."
+rm -rf "$work_dir/out"
+rm -rf "$work_dir/build"
+
+echo "[INFO] - Build ${NTBUILD}_${VERSION} for ${DEVICE_MODEL} successful!"
 # 5. Clean up the workspace
 echo "[SYSTEM] - Clean Workflow.."
 rm -rf "$work_dir/out"
