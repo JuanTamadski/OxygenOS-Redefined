@@ -154,7 +154,8 @@ ZIP_NAME="${NTBUILD}_${DEVICE_MODEL}_${ANDROID_VER}_OS${BASE_BUILD_ID}_Fastboot.
 # Navigate into the output directory so the zip structure is flat 
 # (Users will see the 5 folders immediately upon extracting)
 pushd "$OUT_DIR" >/dev/null || exit
-zip -r "$ZIP_NAME" ./* mv "$ZIP_NAME" "$work_dir/"
+zip -r "$ZIP_NAME" ./* 
+mv "$ZIP_NAME" "$work_dir/"
 popd >/dev/null || exit
 
 echo "[SCRIPT] - Cleaning up temporary output directories..."
