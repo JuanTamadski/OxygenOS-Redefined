@@ -60,6 +60,24 @@ remove_fsv "$work_dir/build/baserom/images/system_ext"
 
 cp -rf $BLOB/feature_com.hma.otablock.xml $MY_STOCK/etc/extension
 
+# --- INJECT PREBUILTS START ---
+PREBUILTS_DIR="$work_dir/prebuilts/my_product/priv-app"
+TARGET_MY_PRODUCT="$work_dir/build/baserom/images/my_product/priv-app"
+
+if [ -d "$PREBUILTS_DIR" ]; then
+    echo "[MODS] - Integrating custom prebuilts into my_product/priv-app..."
+    
+    # Ensure the target directory exists in the unpacked ROM
+    mkdir -p "$TARGET_MY_PRODUCT"
+    
+    # Copy the contents over
+    cp -rf "$PREBUILTS_DIR/"* "$TARGET_MY_PRODUCT/"
+    
+    echo "[MODS] - Prebuilts integrated successfully."
+else
+    echo "[INFO] - Prebuilts directory not found at $PREBUILTS_DIR, skipping."
+fi
+# --- INJECT PREBUILTS END ---
 
 echo "[REPACK] - Packing partition..."
 for pname in ${super_list}; do
