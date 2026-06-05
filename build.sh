@@ -121,6 +121,6 @@ done
 
 if [[ $localbuild = "y" ]]; then
     bash $work_dir/packROM.sh y
-    cp -rf $work_dir/bin/default/script/* $work_dir/bin/script2flash/META-INF/Data/
-    cp -rf $work_dir/bin/default/device/* $work_dir/bin/ddevice/
+    #cp -rf $work_dir/bin/default/script/* $work_dir/bin/script2flash/META-INF/Data/
+    #cp -rf $work_dir/bin/default/device/* $work_dir/bin/ddevice/
 fi
