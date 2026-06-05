@@ -1,0 +1,24 @@
+name: Clean Cache
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the cleanup from the Actions tab
+  schedule:
+    - cron: '0 0 * * 0' # Automatically runs every Sunday at midnight to prevent storage buildup
+
+permissions:
+  actions: write # Explicitly grants the workflow permission to delete caches
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Clear all GitHub Actions caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching and deleting all repository caches..."
+          gh cache delete --all
+          echo "Cache cleanup completed successfully!"
