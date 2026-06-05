@@ -58,10 +58,11 @@ jobs:
       - name: Build and Pack ROM...
         env:
           INPUT_URL: ${{ inputs.input_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Passing "y" here lets build.sh handle the entire pipeline natively
-          sudo bash build.sh "$INPUT_URL" "y"
-
+          # The -E flag ensures sudo does not strip away the GITHUB_TOKEN environment variable
+          sudo -E bash build.sh "$INPUT_URL" "y"
+          
       # --- NEW: SSH Setup for rsync ---
       - name: Setup SSH for rsync upload
         run: |
