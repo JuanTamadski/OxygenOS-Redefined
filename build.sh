@@ -42,6 +42,45 @@ for part in system system_ext product vendor odm my_product my_engineering my_st
     PACK_TYPE=$(cat $work_dir/bin/ddevice/fstype.txt)
 done
 
+# ==========================================
+# KernelSU / Custom Kernel Injection
+# ==========================================
+echo "[MOD] - Fetching latest Kernel from JuanTamadski/Action-Build..."
+
+TMP_KERNEL_DIR="$work_dir/tmp_kernel"
+mkdir -p "$TMP_KERNEL_DIR"
+
+# 1. Download the latest release asset using the GitHub CLI
+# The --pattern flag ensures it only grabs the flashable zip or img
+gh release download --repo "JuanTamadski/Action-Build" --pattern "*.zip" --dir "$TMP_KERNEL_DIR" || echo "[WARN] Failed to fetch kernel. Skipping."
+
+# 2. Extract the downloaded zip (assuming it's an AnyKernel3 zip)
+if ls "$TMP_KERNEL_DIR"/*.zip 1> /dev/null 2>&1; then
+    echo "[MOD] - Extracting kernel zip..."
+    unzip -q "$TMP_KERNEL_DIR"/*.zip -d "$TMP_KERNEL_DIR/extracted"
+    
+    # 3. Swap the kernel images into the ROM workspace
+    # GKI 2.0 devices use init_boot for the ramdisk/root
+    if [ -f "$TMP_KERNEL_DIR/extracted/init_boot.img" ]; then
+        echo "[MOD] - Injecting custom init_boot.img (KernelSU/SUSFS)..."
+        cp -f "$TMP_KERNEL_DIR/extracted/init_boot.img" "$work_dir/build/baserom/images/init_boot.img"
+    fi
+    
+    # Always inject the main boot image if present
+    if [ -f "$TMP_KERNEL_DIR/extracted/Image" ]; then
+         # Note: If your kernel repo outputs a raw 'Image' file instead of a pre-patched boot.img, 
+         # you would need an extra step here to repack it into the stock boot.img using magiskboot.
+         # If it outputs a ready-to-flash boot.img, use this:
+         cp -f "$TMP_KERNEL_DIR/extracted/boot.img" "$work_dir/build/baserom/images/boot.img" 2>/dev/null
+    fi
+else
+    echo "[WARN] No kernel zip found in the release."
+fi
+
+# Clean up
+rm -rf "$TMP_KERNEL_DIR"
+# ==========================================
+
 echo "[INFO] - Gathering Devices Infomations"
 source $work_dir/bin/ddevice/fetchINFO.sh
 bash $work_dir/bin/ddevice/modifyINFO.sh
