@@ -33,20 +33,31 @@ mkdir -p "$OUT_DIR/MODEM"
 # --- GITHUB INTEGRATION START ---
 echo "[SCRIPT] - Fetching latest AnyKernel3 from JuanTamadski/Action-Build..."
 
+# Determine the target device based on the ROM variables.
+# Adjust $DEVICE_MODEL or $OS_TYPE to match the exact variable your script uses.
+if [[ "$DEVICE_MODEL" == *"PJE110"* ]] || [[ "$OS_TYPE" == *"ColorOS"* ]] || [[ "$INPUT_URL" == *"ColorOS"* ]]; then
+    AK3_KEYWORD="ace3"
+    echo "[SCRIPT] - Detected Ace 3 (ColorOS) build. Targeting kernel with keyword: ${AK3_KEYWORD}"
+else
+    AK3_KEYWORD="12r"
+    echo "[SCRIPT] - Detected 12R (OxygenOS) build. Targeting kernel with keyword: ${AK3_KEYWORD}"
+fi
+
 # Use GitHub Token to prevent rate limiting and access private repos
 if [ -n "$GITHUB_TOKEN" ]; then
     echo "[SCRIPT] - Authenticated GitHub API request..."
-    AK3_URL=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*\.zip" | head -n 1 | cut -d '"' -f 4)
+    # Notice the grep command now dynamically inserts the ${AK3_KEYWORD}
+    AK3_URL=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*${AK3_KEYWORD}.*\.zip" | head -n 1 | cut -d '"' -f 4)
 else
     echo "[SCRIPT] - Unauthenticated GitHub API request..."
-    AK3_URL=$(curl -s https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*\.zip" | head -n 1 | cut -d '"' -f 4)
+    AK3_URL=$(curl -s https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*${AK3_KEYWORD}.*\.zip" | head -n 1 | cut -d '"' -f 4)
 fi
 
 if [ -n "$AK3_URL" ]; then
     echo "[SCRIPT] - Downloading $(basename "$AK3_URL") to EXTRA folder..."
     curl -L "$AK3_URL" -o "$OUT_DIR/EXTRA/AnyKernel3.zip"
 else
-    echo "[WARN] - No AnyKernel3 zip found in the latest release."
+    echo "[WARN] - No AnyKernel3 zip found matching '${AK3_KEYWORD}' in the latest release."
 fi
 # --- GITHUB INTEGRATION END ---
 
