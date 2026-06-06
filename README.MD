@@ -60,7 +60,7 @@ bash setup.sh
 ```bash
 # Clone the repository
 git clone https://github.com/tiencv2006/OxygenOS-Redefined.git
-cd nothingsvn_oplus-toolbuild
+cd OxygenOS-Redefined
 ```
 
 **Option A** — Build from a firmware URL:
@@ -74,7 +74,7 @@ bash build.sh <URL_OF_FIRMWARE_OTA> y
 ```bash
 bash build.sh <PATH_TO_FIRMWARE_FILE> y
 ```
-
+notes: make changes to test.sh first if you are planning to edit build.sh. You can do the same with unpackROM-Fastboot.sh.
 
 ##  GitHub Actions (CI/CD)
 
