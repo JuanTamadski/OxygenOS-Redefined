@@ -56,18 +56,21 @@ echo "[SOURCEFORGE] - Uploading via rsync..."
 SF_USER="juanski"
 SF_PROJECT="oplus-toolbuild"
 
-# Construct the target directory path automatically using the script's variables
-TARGET_DIR="/home/frs/project/${SF_PROJECT}/${uploaddir}/${VERSION}/${DEVICE_MODEL}/"
+echo "[SOURCEFORGE] - Preparing local directory tree..."
 
-# NEW: Explicitly create the missing directories on SourceForge before uploading
-echo "[SOURCEFORGE] - Creating remote directory structure..."
-ssh "${SF_USER}@frs.sourceforge.net" "mkdir -p ${TARGET_DIR}" || {
-    echo "[SOURCEFORGE] - Warning: Could not create directories. They might already exist."
-}
+# 1. Create the exact folder structure locally on the runner
+LOCAL_TREE="$work_dir/sf_upload/${uploaddir}/${VERSION}/${DEVICE_MODEL}"
+mkdir -p "$LOCAL_TREE"
 
-# rsync command (-a for archive mode, -v for verbose, -P for progress)
-rsync -avP -e ssh "$output_file" "${SF_USER}@frs.sourceforge.net:${TARGET_DIR}" || {
-    echo "[SOURCEFORGE] - Error uploading file to SourceForge: $output_file"
+# 2. Move the completed ROM into this local folder structure
+mv "$output_file" "$LOCAL_TREE/"
+
+echo "[SOURCEFORGE] - Uploading tree via rsync..."
+
+# 3. Rsync the contents of the 'sf_upload' directory directly to the SourceForge project root. 
+# Rsync will automatically build the internal folders as it transfers.
+rsync -avP -e ssh "$work_dir/sf_upload/" "${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/" || {
+    echo "[SOURCEFORGE] - Error uploading file to SourceForge"
     exit 1
 }
 
