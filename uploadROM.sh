@@ -59,11 +59,18 @@ SF_PROJECT="oplus-toolbuild"
 # Construct the target directory path automatically using the script's variables
 TARGET_DIR="/home/frs/project/${SF_PROJECT}/${uploaddir}/${VERSION}/${DEVICE_MODEL}/"
 
+# NEW: Explicitly create the missing directories on SourceForge before uploading
+echo "[SOURCEFORGE] - Creating remote directory structure..."
+ssh "${SF_USER}@frs.sourceforge.net" "mkdir -p ${TARGET_DIR}" || {
+    echo "[SOURCEFORGE] - Warning: Could not create directories. They might already exist."
+}
+
 # rsync command (-a for archive mode, -v for verbose, -P for progress)
 rsync -avP -e ssh "$output_file" "${SF_USER}@frs.sourceforge.net:${TARGET_DIR}" || {
     echo "[SOURCEFORGE] - Error uploading file to SourceForge: $output_file"
     exit 1
 }
+
 
 echo "[SYSTEM] - Clean Workflow.."
 rm -rf "$work_dir/out"
