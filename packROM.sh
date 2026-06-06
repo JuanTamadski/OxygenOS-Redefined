@@ -34,8 +34,7 @@ mkdir -p "$OUT_DIR/MODEM"
 echo "[SCRIPT] - Fetching latest AnyKernel3 from JuanTamadski/Action-Build..."
 
 # Determine the target device based on the ROM variables.
-# Adjust $DEVICE_MODEL or $OS_TYPE to match the exact variable your script uses.
-if [[ "$DEVICE_MODEL" == *"PJE110"* ]] || [[ "$OS_TYPE" == *"ColorOS"* ]] || [[ "$INPUT_URL" == *"ColorOS"* ]]; then
+if [[ "$DEVICE_MODEL" == *"PJD110"* ]] || [[ "$OS_TYPE" == *"ColorOS"* ]] || [[ "$INPUT_URL" == *"ColorOS"* ]]; then
     AK3_KEYWORD="ace3"
     echo "[SCRIPT] - Detected Ace 3 (ColorOS) build. Targeting kernel with keyword: ${AK3_KEYWORD}"
 else
@@ -46,7 +45,6 @@ fi
 # Use GitHub Token to prevent rate limiting and access private repos
 if [ -n "$GITHUB_TOKEN" ]; then
     echo "[SCRIPT] - Authenticated GitHub API request..."
-    # Notice the grep command now dynamically inserts the ${AK3_KEYWORD}
     AK3_URL=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/JuanTamadski/Action-Build/releases/latest | grep "browser_download_url" | grep -i "anykernel.*${AK3_KEYWORD}.*\.zip" | head -n 1 | cut -d '"' -f 4)
 else
     echo "[SCRIPT] - Unauthenticated GitHub API request..."
@@ -54,8 +52,19 @@ else
 fi
 
 if [ -n "$AK3_URL" ]; then
-    echo "[SCRIPT] - Downloading $(basename "$AK3_URL") to EXTRA folder..."
-    curl -L "$AK3_URL" -o "$OUT_DIR/EXTRA/AnyKernel3.zip"
+    # FIXED: Download to a temporary working directory instead of $OUT_DIR/EXTRA
+    AK3_TMP_DIR="$work_dir/ak3_tmp"
+    mkdir -p "$AK3_TMP_DIR"
+    
+    echo "[SCRIPT] - Downloading $(basename "$AK3_URL") to temporary directory..."
+    curl -L "$AK3_URL" -o "$AK3_TMP_DIR/AnyKernel3.zip"
+    
+    # Extract the zip to get the kernel binary (usually named 'Image')
+    echo "[SCRIPT] - Extracting kernel binary..."
+    unzip -q "$AK3_TMP_DIR/AnyKernel3.zip" -d "$AK3_TMP_DIR"
+    
+    # Point your Magiskboot patching logic to look here:
+    # e.g., KERNEL_BINARY="$AK3_TMP_DIR/Image"
 else
     echo "[WARN] - No AnyKernel3 zip found matching '${AK3_KEYWORD}' in the latest release."
 fi
@@ -152,12 +161,13 @@ if ls "$work_dir/build/baserom/images/"*.img >/dev/null 2>&1; then
 fi
 
 # generate dynamic script
-if [ -d "$work_dir/bin/script2flash/META-INF" ]; then
-    cp -rf "$work_dir/bin/script2flash/META-INF" "$OUT_DIR/"
-fi
-if ls "$work_dir/bin/script2flash/"*.exe >/dev/null 2>&1; then
-    cp -rf "$work_dir/bin/script2flash/"*.exe "$OUT_DIR/"
-fi
+# Uncomment if you you want it as flashable in TWRP
+#if [ -d "$work_dir/bin/script2flash/META-INF" ]; then
+#    cp -rf "$work_dir/bin/script2flash/META-INF" "$OUT_DIR/"
+#fi
+#if ls "$work_dir/bin/script2flash/"*.exe >/dev/null 2>&1; then
+#   cp -rf "$work_dir/bin/script2flash/"*.exe "$OUT_DIR/"
+#fi
 
 echo "[SCRIPT] - Packaging output into a standard .zip archive..."
 ZIP_NAME="${NTBUILD}_${DEVICE_MODEL}_${ANDROID_VER}_OS${BASE_BUILD_ID}_Fastboot.zip"
